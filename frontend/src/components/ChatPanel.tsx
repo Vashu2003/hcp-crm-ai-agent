@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAppDispatch, useAppSelector } from '../store';
 import { sendMessage, pushUserMessage } from '../store/chatSlice';
 import { fetchInteractions } from '../store/interactionsSlice';
@@ -33,7 +35,13 @@ export function ChatPanel() {
       <div className="chat-log" ref={logRef}>
         {messages.map((m, i) => (
           <div key={i} className={`bubble ${m.role}`}>
-            {m.content}
+            {m.role === 'assistant' ? (
+              <div className="md">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+              </div>
+            ) : (
+              m.content
+            )}
             {m.tool_calls && m.tool_calls.length > 0 && (
               <div className="tools">
                 {m.tool_calls.map((t, j) => <span key={j} className="tool-chip">🛠 {t}</span>)}
