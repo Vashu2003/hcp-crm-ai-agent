@@ -1,7 +1,11 @@
-from datetime import date, datetime
+from datetime import date as _date, datetime as _datetime
 from typing import Optional, Any
 
 from pydantic import BaseModel, ConfigDict
+
+# `date`/`datetime` are aliased above because a Pydantic field is literally named
+# `date`; without the alias the field name shadows the type in its own annotation
+# and Pydantic resolves the type to None.
 
 
 # ---------- HCP ----------
@@ -15,7 +19,7 @@ class HCPBase(BaseModel):
 class HCPOut(HCPBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    created_at: Optional[datetime] = None
+    created_at: Optional[_datetime] = None
 
 
 # ---------- Interaction ----------
@@ -26,7 +30,7 @@ class InteractionCreate(BaseModel):
     specialty: Optional[str] = None
     organization: Optional[str] = None
     rep_name: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[_date] = None
     channel: Optional[str] = None  # in-person / call / virtual
     product_discussed: Optional[str] = None
     raw_notes: str
@@ -34,7 +38,7 @@ class InteractionCreate(BaseModel):
 
 class InteractionUpdate(BaseModel):
     rep_name: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[_date] = None
     channel: Optional[str] = None
     product_discussed: Optional[str] = None
     raw_notes: Optional[str] = None
@@ -45,15 +49,15 @@ class InteractionOut(BaseModel):
     id: int
     hcp_id: int
     rep_name: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[_date] = None
     channel: Optional[str] = None
     product_discussed: Optional[str] = None
     raw_notes: Optional[str] = None
     llm_summary: Optional[str] = None
     extracted_entities: Optional[Any] = None
     sentiment: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: Optional[_datetime] = None
+    updated_at: Optional[_datetime] = None
     hcp: Optional[HCPOut] = None
 
 
@@ -63,10 +67,10 @@ class FollowUpOut(BaseModel):
     id: int
     hcp_id: int
     interaction_id: Optional[int] = None
-    due_date: Optional[date] = None
+    due_date: Optional[_date] = None
     action: Optional[str] = None
     status: Optional[str] = None
-    created_at: Optional[datetime] = None
+    created_at: Optional[_datetime] = None
 
 
 # ---------- Chat ----------
