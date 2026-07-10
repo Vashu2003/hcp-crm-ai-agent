@@ -58,8 +58,13 @@ and structured input run through identical AI logic.
 | Frontend | React + TypeScript, Redux Toolkit, Vite, Inter font |
 | Backend | Python, FastAPI |
 | AI agent | LangGraph (tool-calling StateGraph) |
-| LLM | Groq — `gemma2-9b-it` (primary) / `llama-3.3-70b-versatile` |
+| LLM | Groq — `openai/gpt-oss-20b` (default) / `llama-3.3-70b-versatile` |
 | Database | PostgreSQL (SQLAlchemy ORM) |
+
+> **Note on the model:** the assignment specified `gemma2-9b-it`, which Groq has since
+> **decommissioned**. The model is fully configurable via `GROQ_MODEL`; the app defaults
+> to `openai/gpt-oss-20b` (reliable tool-calling, comfortable free-tier budget), and the
+> assignment's listed alternative `llama-3.3-70b-versatile` works by setting one env var.
 
 ---
 
@@ -123,7 +128,7 @@ App: http://localhost:5173
 | Var | Description |
 |---|---|
 | `GROQ_API_KEY` | Groq API key (required). |
-| `GROQ_MODEL` | `gemma2-9b-it` (default) or `llama-3.3-70b-versatile`. |
+| `GROQ_MODEL` | `openai/gpt-oss-20b` (default) or `llama-3.3-70b-versatile`. |
 | `DATABASE_URL` | SQLAlchemy Postgres URL. |
 | `FRONTEND_ORIGIN` | CORS origin for the Vite dev server. |
 
@@ -131,7 +136,14 @@ App: http://localhost:5173
 
 ## 📸 Screenshots
 
-_Added after the UI is built._
+**Form mode** — structured logging with live AI summary & entity extraction:
+
+![Form mode](docs/screenshots/form-mode.png)
+
+**Chat mode** — natural language routed to the right tool by the LangGraph agent
+(note the `🛠 search_interactions` tool chip for transparency):
+
+![Chat mode](docs/screenshots/chat-mode.png)
 
 ---
 
