@@ -43,7 +43,7 @@ function App() {
           <InteractionList />
         </div>
         <p className="footer-note">
-          FastAPI · LangGraph · Groq ({import.meta.env.VITE_MODEL ?? 'llama-3.1-8b'}) · PostgreSQL · React + Redux
+          FastAPI · LangGraph · Groq ({import.meta.env.VITE_MODEL ?? 'gpt-oss-20b'}) · PostgreSQL · React + Redux
         </p>
       </main>
     </>

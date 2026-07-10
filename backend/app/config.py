@@ -6,11 +6,11 @@ class Settings(BaseSettings):
 
     groq_api_key: str = ""
     # Model is configurable via GROQ_MODEL. The assignment's primary (gemma2-9b-it)
-    # was decommissioned by Groq. We default to llama-3.1-8b-instant (small, fast,
-    # gemma-class) to stay within Groq's free-tier daily token budget; set
-    # GROQ_MODEL=llama-3.3-70b-versatile (the assignment's alternative) for higher
-    # quality if your account has the token headroom.
-    groq_model: str = "llama-3.1-8b-instant"
+    # was decommissioned by Groq. We default to openai/gpt-oss-20b: reliable at
+    # tool-calling and comfortable within the free-tier token budget. Set
+    # GROQ_MODEL=llama-3.3-70b-versatile (the assignment's listed alternative) for
+    # higher quality if your account has the daily token headroom.
+    groq_model: str = "openai/gpt-oss-20b"
     database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/aivoa_crm"
     frontend_origin: str = "http://localhost:5173"
 
