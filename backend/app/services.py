@@ -135,7 +135,10 @@ def search_interactions_service(
 ):
     q = db.query(Interaction)
     if hcp_name:
-        q = q.join(HCP).filter(HCP.name.ilike(f"%{hcp_name}%"))
+        # Match each word so "Dr. Sharma" finds "Dr. Anita Sharma" (non-contiguous).
+        q = q.join(HCP)
+        for token in hcp_name.split():
+            q = q.filter(HCP.name.ilike(f"%{token}%"))
     if product:
         q = q.filter(Interaction.product_discussed.ilike(f"%{product}%"))
     if sentiment:

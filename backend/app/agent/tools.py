@@ -158,7 +158,7 @@ def generate_summary_report(
     db = SessionLocal()
     try:
         rows = search_interactions_service(
-            db, hcp_name=hcp_name, date_from=date_from, date_to=date_to, limit=100
+            db, hcp_name=hcp_name, date_from=date_from, date_to=date_to, limit=40
         )
         if not rows:
             return "No interactions found for that filter."

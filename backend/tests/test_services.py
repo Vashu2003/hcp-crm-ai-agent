@@ -57,8 +57,18 @@ def test_search_filters_by_hcp_and_sentiment(db):
     assert len(results) == 1
     assert results[0].hcp.name == "Dr. One"
 
+    # Multi-word query must match non-contiguously: "Dr. One" -> "Dr. One"
+    assert len(search_interactions_service(db, hcp_name="Dr. One")) == 1
+
     pos = search_interactions_service(db, sentiment="positive")
     assert len(pos) == 2  # both mocked as positive
+
+
+def test_search_matches_name_non_contiguously(db):
+    # Regression: "Dr. Sharma" must find "Dr. Anita Sharma".
+    log_interaction_service(db, hcp_name="Dr. Anita Sharma", raw_notes="a")
+    assert len(search_interactions_service(db, hcp_name="Dr. Sharma")) == 1
+    assert len(search_interactions_service(db, hcp_name="Sharma")) == 1
 
 
 def test_schedule_followup_requires_existing_hcp(db):
