@@ -11,18 +11,18 @@ export function StatsBar() {
   const pending = followups.filter((f) => (f.status ?? 'pending') === 'pending').length;
 
   const tiles = [
-    { label: 'Interactions', value: total, accent: 'var(--primary)' },
-    { label: 'HCPs engaged', value: hcps, accent: 'var(--primary)' },
-    { label: 'Positive', value: positive, accent: 'var(--pos)' },
-    { label: 'Negative', value: negative, accent: 'var(--neg)' },
-    { label: 'Follow-ups due', value: pending, accent: 'var(--neu)' },
+    { label: 'Interactions', value: total, color: 'var(--ink)' },
+    { label: 'HCPs engaged', value: hcps, color: 'var(--ink)' },
+    { label: 'Positive', value: positive, color: 'var(--pos)' },
+    { label: 'Negative', value: negative, color: 'var(--neg)' },
+    { label: 'Follow-ups due', value: pending, color: 'var(--neu)' },
   ];
 
   return (
     <div className="stats">
       {tiles.map((t) => (
         <div className="stat" key={t.label}>
-          <div className="stat-value" style={{ color: t.accent }}>{t.value}</div>
+          <div className="stat-value" style={{ color: t.color }}>{t.value}</div>
           <div className="stat-label">{t.label}</div>
         </div>
       ))}

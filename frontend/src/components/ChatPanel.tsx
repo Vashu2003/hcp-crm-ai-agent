@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { useAppDispatch, useAppSelector } from '../store';
 import { sendMessage, pushUserMessage } from '../store/chatSlice';
 import { fetchInteractions } from '../store/interactionsSlice';
+import { IconTool } from './Icons';
 
 const SUGGESTIONS = [
   'Met Dr. Menon on a call about Januvia, he had insurance concerns.',
@@ -44,17 +45,18 @@ export function ChatPanel() {
             )}
             {m.tool_calls && m.tool_calls.length > 0 && (
               <div className="tools">
-                {m.tool_calls.map((t, j) => <span key={j} className="tool-chip">🛠 {t}</span>)}
+                {m.tool_calls.map((t, j) => (
+                  <span key={j} className="tool-chip"><IconTool size={11} /> {t}</span>
+                ))}
               </div>
             )}
           </div>
         ))}
         {sending && <div className="typing">Assistant is thinking…</div>}
         {messages.length <= 1 && (
-          <div className="tag-row" style={{ marginTop: 4 }}>
+          <div className="suggest">
             {SUGGESTIONS.map((s) => (
-              <button key={s} type="button" className="chip" style={{ cursor: 'pointer' }}
-                onClick={() => send(s)}>{s}</button>
+              <button key={s} type="button" className="suggest-chip" onClick={() => send(s)}>{s}</button>
             ))}
           </div>
         )}

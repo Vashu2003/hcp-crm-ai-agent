@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../store';
 import { createInteraction, clearLastCreated } from '../store/interactionsSlice';
 import type { InteractionCreate } from '../types';
 import { SentimentBadge } from './SentimentBadge';
+import { IconSpark } from './Icons';
 
 // Local calendar date (YYYY-MM-DD), not UTC — so a rep in IST logging before ~5:30am
 // doesn't get yesterday's date.
@@ -98,21 +99,23 @@ export function InteractionForm() {
       {error && <div className="error-banner">{error}</div>}
 
       <button className="btn btn-primary btn-block" disabled={creating}>
-        {creating ? 'Logging & analyzing…' : '✨ Log interaction'}
+        {creating ? 'Logging & analyzing…' : 'Log interaction'}
       </button>
 
       {lastCreated && (
         <div className="ai-result">
-          <div className="ai-label">✨ AI summary & extraction
+          <div className="ai-label">
+            <IconSpark size={13} /> AI summary & extraction
+            <span className="spacer" />
             <SentimentBadge sentiment={lastCreated.sentiment} />
           </div>
           <p className="summary">{lastCreated.llm_summary}</p>
           <div className="tag-row">
-            {(ents?.products ?? []).map((p) => <span key={p} className="chip">💊 {p}</span>)}
-            {(ents?.key_topics ?? []).map((t) => <span key={t} className="chip">{t}</span>)}
-            {ents?.follow_up_date && <span className="chip">📅 follow-up {ents.follow_up_date}</span>}
+            {(ents?.products ?? []).map((p) => <span key={p} className="tag">{p}</span>)}
+            {(ents?.key_topics ?? []).map((t) => <span key={t} className="tag">{t}</span>)}
+            {ents?.follow_up_date && <span className="tag">follow-up {ents.follow_up_date}</span>}
           </div>
-          <button type="button" className="btn btn-ghost" style={{ marginTop: 12 }}
+          <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}
             onClick={() => dispatch(clearLastCreated())}>Dismiss</button>
         </div>
       )}

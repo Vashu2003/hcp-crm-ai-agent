@@ -150,9 +150,13 @@ App: http://localhost:5173
 ![Form mode](docs/screenshots/form-mode.png)
 
 **Chat mode** — natural language routed to the right tool by the LangGraph agent
-(note the `🛠 search_interactions` tool chip for transparency):
+(note the tool chip for transparency):
 
 ![Chat mode](docs/screenshots/chat-mode.png)
+
+**Dark mode** — fully theme-aware (light + dark):
+
+![Dark mode](docs/screenshots/dark-mode.png)
 
 ---
 
