@@ -1,11 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { ChatApi } from '../api/client';
-import type { ChatMessage } from '../types';
+import type { ChatMessage, Interaction } from '../types';
 
 interface ChatState {
   messages: ChatMessage[];
   sending: boolean;
   error: string | null;
+  // The interaction the agent last logged/edited — drives the live form fill.
+  lastInteraction: Interaction | null;
 }
 
 const initialState: ChatState = {
@@ -18,6 +20,7 @@ const initialState: ChatState = {
   ],
   sending: false,
   error: null,
+  lastInteraction: null,
 };
 
 export const sendMessage = createAsyncThunk(
@@ -29,7 +32,7 @@ export const sendMessage = createAsyncThunk(
     const history = state.chat.messages
       .slice(0, -1)
       .map((m) => ({ role: m.role, content: m.content }));
-    return ChatApi.send(text, history);
+    return ChatApi.send(text, history, state.chat.lastInteraction?.id ?? null);
   },
 );
 
@@ -42,6 +45,10 @@ const chatSlice = createSlice({
     },
     resetChat(state) {
       state.messages = initialState.messages;
+      state.lastInteraction = null;
+    },
+    clearLastInteraction(state) {
+      state.lastInteraction = null;
     },
   },
   extraReducers: (builder) => {
@@ -57,6 +64,7 @@ const chatSlice = createSlice({
           content: action.payload.reply || '(no response)',
           tool_calls: action.payload.tool_calls,
         });
+        if (action.payload.interaction) state.lastInteraction = action.payload.interaction;
       })
       .addCase(sendMessage.rejected, (state, action) => {
         state.sending = false;
@@ -69,5 +77,5 @@ const chatSlice = createSlice({
   },
 });
 
-export const { pushUserMessage, resetChat } = chatSlice.actions;
+export const { pushUserMessage, resetChat, clearLastInteraction } = chatSlice.actions;
 export default chatSlice.reducer;

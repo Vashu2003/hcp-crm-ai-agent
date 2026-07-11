@@ -5,6 +5,7 @@ The LLM node is ChatGroq bound to the 5 tools; a ToolNode executes any tool
 calls, then control loops back to the LLM until it produces a final answer.
 """
 
+import re
 from datetime import date
 from functools import lru_cache
 
@@ -39,9 +40,18 @@ def get_graph():
     return graph.compile()
 
 
-def run_agent(message: str, history: list[dict] | None = None) -> dict:
-    """Run one chat turn through the agent. Returns {reply, tool_calls}."""
+def run_agent(
+    message: str, history: list[dict] | None = None, current_interaction_id: int | None = None
+) -> dict:
+    """Run one chat turn through the agent. Returns {reply, tool_calls, interaction_id}."""
     messages = []
+    # Tell the agent which interaction is open in the form, so "correct it" edits resolve.
+    if current_interaction_id:
+        messages.append(SystemMessage(content=(
+            f"The rep is currently working on interaction #{current_interaction_id}. "
+            f"If they ask to change, correct, or edit 'it'/'that' without giving an id, "
+            f"call edit_interaction with interaction_id={current_interaction_id}."
+        )))
     # Only replay the most recent turns — history is context, not unbounded transcript.
     for turn in (history or [])[-8:]:
         role = turn.get("role")
@@ -104,4 +114,15 @@ def run_agent(message: str, history: list[dict] | None = None) -> dict:
     if tokens:
         print(f"[agent] turn used ~{tokens} tokens · tools={tool_calls or 'none'}", flush=True)
 
-    return {"reply": reply, "tool_calls": tool_calls}
+    # If a log/edit tool ran, surface the interaction id (parsed from the tool result)
+    # so the chat route can return the structured record for the UI form to auto-fill.
+    interaction_id = None
+    if any(t in tool_calls for t in ("log_interaction", "edit_interaction")):
+        for m in reversed(out_messages):
+            if isinstance(m, ToolMessage) and isinstance(m.content, str):
+                match = re.search(r"interaction #(\d+)", m.content, re.IGNORECASE)
+                if match:
+                    interaction_id = int(match.group(1))
+                    break
+
+    return {"reply": reply, "tool_calls": tool_calls, "interaction_id": interaction_id}

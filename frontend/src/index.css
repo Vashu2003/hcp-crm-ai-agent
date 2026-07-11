@@ -133,6 +133,33 @@ svg { display: block; }
 .card-head .hint { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .card-body { padding: 16px; }
 
+/* ---------- Log Interaction split (form | chat) ---------- */
+.log-card { margin-bottom: 18px; overflow: hidden; }
+.split { display: grid; grid-template-columns: 0.9fr 1.1fr; height: 600px; }
+.split-form { padding: 16px; border-right: 1px solid var(--line); overflow-y: auto; }
+.split-chat { display: flex; flex-direction: column; min-height: 0; }
+.split-chat .chat { flex: 1; min-height: 0; height: auto; }
+.pane-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 12px;
+}
+.split-chat .pane-label { padding: 14px 16px 0; margin-bottom: 6px; }
+@media (max-width: 900px) {
+  .split { grid-template-columns: 1fr; height: auto; }
+  .split-form { border-right: none; border-bottom: 1px solid var(--line); }
+  .split-chat .chat { height: 460px; }
+}
+
+.ai-flag {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--brand); background: var(--brand-tint); border: 1px solid var(--line);
+  padding: 7px 11px; border-radius: var(--r-sm); margin-bottom: 14px;
+}
+.form-actions { display: flex; gap: 8px; margin-top: 4px; }
+.input[readonly] { background: var(--inset); color: var(--ink-2); cursor: default; }
+.input[readonly]:focus { border-color: var(--line-strong); box-shadow: none; }
+
 /* ---------- Segmented tabs ---------- */
 .tabs { display: inline-flex; background: var(--inset); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
 .tab {

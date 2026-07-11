@@ -84,8 +84,12 @@ class FollowUpUpdate(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: list[dict] = []  # [{role: "user"|"assistant", content: str}]
+    # The interaction currently shown in the form, so "correct it"/"change that" edits work.
+    current_interaction_id: Optional[int] = None
 
 
 class ChatResponse(BaseModel):
     reply: str
     tool_calls: list[str] = []  # names of tools the agent invoked (for UI transparency)
+    # The interaction the agent just created/edited, so the UI form can auto-fill from chat.
+    interaction: Optional[InteractionOut] = None

@@ -1,83 +1,119 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
-import { createInteraction, clearLastCreated } from '../store/interactionsSlice';
+import { createInteraction, updateInteraction, fetchInteractions } from '../store/interactionsSlice';
+import { clearLastInteraction } from '../store/chatSlice';
 import type { InteractionCreate } from '../types';
 import { SentimentBadge } from './SentimentBadge';
 import { IconSpark } from './Icons';
 
-// Local calendar date (YYYY-MM-DD), not UTC — so a rep in IST logging before ~5:30am
-// doesn't get yesterday's date.
 const todayLocal = () => {
   const d = new Date();
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 };
 
-const EMPTY: InteractionCreate = {
-  hcp_name: '',
-  specialty: '',
-  organization: '',
-  rep_name: 'Vashu Singh',
-  date: todayLocal(),
-  channel: 'in-person',
-  product_discussed: '',
-  raw_notes: '',
+interface FormState {
+  id?: number;
+  hcp_name: string;
+  specialty: string;
+  organization: string;
+  product_discussed: string;
+  channel: string;
+  date: string;
+  raw_notes: string;
+}
+
+const EMPTY: FormState = {
+  hcp_name: '', specialty: '', organization: '', product_discussed: '',
+  channel: 'in-person', date: todayLocal(), raw_notes: '',
 };
 
 export function InteractionForm() {
   const dispatch = useAppDispatch();
-  const { creating, lastCreated, error } = useAppSelector((s) => s.interactions);
-  const [form, setForm] = useState<InteractionCreate>(EMPTY);
+  const lastInteraction = useAppSelector((s) => s.chat.lastInteraction);
+  const { creating, error } = useAppSelector((s) => s.interactions);
+  const [form, setForm] = useState<FormState>(EMPTY);
 
-  const set = (k: keyof InteractionCreate, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  // The AI fills the form: whenever the chat agent logs/edits an interaction, sync it here.
+  useEffect(() => {
+    const it = lastInteraction;
+    if (!it) return;
+    setForm({
+      id: it.id,
+      hcp_name: it.hcp?.name ?? '',
+      specialty: it.hcp?.specialty ?? '',
+      organization: it.hcp?.organization ?? '',
+      product_discussed: it.product_discussed ?? '',
+      channel: it.channel ?? 'in-person',
+      date: it.date ?? todayLocal(),
+      raw_notes: it.raw_notes ?? '',
+    });
+  }, [lastInteraction]);
+
+  const set = (k: keyof FormState, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const editing = form.id != null;
+  const ents = editing ? lastInteraction?.extracted_entities : null;
+
+  const clear = () => { setForm(EMPTY); dispatch(clearLastInteraction()); };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.hcp_name.trim() || !form.raw_notes.trim()) return;
-    // Drop empty optional fields so we never POST date:"" (which the API 422s).
-    const payload = { ...form };
-    if (!payload.date) delete payload.date;
-    dispatch(createInteraction(payload)).then((res) => {
-      if (createInteraction.fulfilled.match(res)) {
-        setForm({ ...EMPTY, date: todayLocal() });
-      }
-    });
+    const done = () => dispatch(fetchInteractions());
+    if (editing) {
+      dispatch(updateInteraction({
+        id: form.id!,
+        patch: {
+          product_discussed: form.product_discussed,
+          channel: form.channel,
+          date: form.date,
+          raw_notes: form.raw_notes,
+        },
+      })).then(done);
+    } else {
+      if (!form.hcp_name.trim() || !form.raw_notes.trim()) return;
+      const payload: InteractionCreate = {
+        hcp_name: form.hcp_name,
+        specialty: form.specialty || undefined,
+        organization: form.organization || undefined,
+        product_discussed: form.product_discussed || undefined,
+        channel: form.channel || undefined,
+        date: form.date || undefined,
+        raw_notes: form.raw_notes,
+      };
+      dispatch(createInteraction(payload)).then((res) => {
+        if (createInteraction.fulfilled.match(res)) clear();
+        done();
+      });
+    }
   };
 
-  const ents = lastCreated?.extracted_entities;
-
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={submit} className="interaction-form">
+      {editing && (
+        <div className="ai-flag">
+          <IconSpark size={13} /> Filled by AI from chat
+          <span className="spacer" />
+          <SentimentBadge sentiment={lastInteraction?.sentiment} />
+        </div>
+      )}
+
       <div className="row">
         <div className="field">
           <label>HCP name <span className="req">*</span></label>
-          <input className="input" placeholder="Dr. Anita Sharma"
+          <input className="input" placeholder="Dr. Anita Sharma" readOnly={editing}
             value={form.hcp_name} onChange={(e) => set('hcp_name', e.target.value)} />
         </div>
         <div className="field">
           <label>Specialty</label>
-          <input className="input" placeholder="Cardiology"
+          <input className="input" placeholder="Cardiology" readOnly={editing}
             value={form.specialty} onChange={(e) => set('specialty', e.target.value)} />
         </div>
       </div>
 
       <div className="row">
         <div className="field">
-          <label>Organization</label>
-          <input className="input" placeholder="Apollo Hospital"
-            value={form.organization} onChange={(e) => set('organization', e.target.value)} />
-        </div>
-        <div className="field">
           <label>Product discussed</label>
           <input className="input" placeholder="Xarelto"
             value={form.product_discussed} onChange={(e) => set('product_discussed', e.target.value)} />
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="field">
-          <label>Date</label>
-          <input className="input" type="date"
-            value={form.date} onChange={(e) => set('date', e.target.value)} />
         </div>
         <div className="field">
           <label>Channel</label>
@@ -90,35 +126,39 @@ export function InteractionForm() {
       </div>
 
       <div className="field">
+        <label>Date</label>
+        <input className="input" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
+      </div>
+
+      <div className="field">
         <label>Interaction notes <span className="req">*</span></label>
         <textarea className="textarea"
-          placeholder="Discussed Xarelto dosing for AF patients. Dr. Sharma keen on new data, wants a lunch-and-learn. Left samples. Follow up next week."
+          placeholder="Describe the visit in the chat on the right — the AI fills this in. You can also type/edit here."
           value={form.raw_notes} onChange={(e) => set('raw_notes', e.target.value)} />
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
-
-      <button className="btn btn-primary btn-block" disabled={creating}>
-        {creating ? 'Logging & analyzing…' : 'Log interaction'}
-      </button>
-
-      {lastCreated && (
+      {editing && lastInteraction?.llm_summary && (
         <div className="ai-result">
-          <div className="ai-label">
-            <IconSpark size={13} /> AI summary & extraction
-            <span className="spacer" />
-            <SentimentBadge sentiment={lastCreated.sentiment} />
-          </div>
-          <p className="summary">{lastCreated.llm_summary}</p>
+          <div className="ai-label"><IconSpark size={13} /> AI summary</div>
+          <p className="summary">{lastInteraction.llm_summary}</p>
           <div className="tag-row">
             {(ents?.products ?? []).map((p) => <span key={p} className="tag">{p}</span>)}
             {(ents?.key_topics ?? []).map((t) => <span key={t} className="tag">{t}</span>)}
             {ents?.follow_up_date && <span className="tag">follow-up {ents.follow_up_date}</span>}
           </div>
-          <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}
-            onClick={() => dispatch(clearLastCreated())}>Dismiss</button>
         </div>
       )}
+
+      {error && <div className="error-banner">{error}</div>}
+
+      <div className="form-actions">
+        <button className="btn btn-primary" disabled={creating}>
+          {creating ? 'Saving…' : editing ? 'Save changes' : 'Log interaction'}
+        </button>
+        {editing && (
+          <button type="button" className="btn btn-ghost" onClick={clear}>New</button>
+        )}
+      </div>
     </form>
   );
 }

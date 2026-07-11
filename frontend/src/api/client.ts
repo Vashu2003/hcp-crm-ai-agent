@@ -27,9 +27,20 @@ export const FollowUpsApi = {
 export interface ChatApiResponse {
   reply: string;
   tool_calls: string[];
+  interaction?: Interaction | null;
 }
 
 export const ChatApi = {
-  send: (message: string, history: { role: string; content: string }[]) =>
-    api.post<ChatApiResponse>('/api/chat', { message, history }).then((r) => r.data),
+  send: (
+    message: string,
+    history: { role: string; content: string }[],
+    currentInteractionId?: number | null,
+  ) =>
+    api
+      .post<ChatApiResponse>('/api/chat', {
+        message,
+        history,
+        current_interaction_id: currentInteractionId ?? null,
+      })
+      .then((r) => r.data),
 };

@@ -4,13 +4,11 @@ import { ChatPanel } from './components/ChatPanel';
 import { InteractionList } from './components/InteractionList';
 import { StatsBar } from './components/StatsBar';
 import { FollowUps } from './components/FollowUps';
-import { IconPulse, IconForm, IconChat, IconSun, IconMoon } from './components/Icons';
+import { IconPulse, IconSun, IconMoon } from './components/Icons';
 
-type Mode = 'form' | 'chat';
 type Theme = 'light' | 'dark';
 
 function App() {
-  const [mode, setMode] = useState<Mode>('form');
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme');
     if (saved === 'light' || saved === 'dark') return saved;
@@ -42,30 +40,31 @@ function App() {
 
       <main className="container">
         <StatsBar />
-        <div className="grid">
-          <section className="card">
-            <div className="card-head">
-              <div>
-                <h2>Log interaction</h2>
-                <div className="hint">Both modes feed the same LangGraph agent</div>
-              </div>
-              <div className="tabs">
-                <button className={`tab ${mode === 'form' ? 'active' : ''}`} onClick={() => setMode('form')}>
-                  <IconForm size={14} /> Form
-                </button>
-                <button className={`tab ${mode === 'chat' ? 'active' : ''}`} onClick={() => setMode('chat')}>
-                  <IconChat size={14} /> Chat
-                </button>
-              </div>
-            </div>
-            {mode === 'form' ? <div className="card-body"><InteractionForm /></div> : <ChatPanel />}
-          </section>
 
-          <div className="col">
-            <InteractionList />
-            <FollowUps />
+        <section className="card log-card">
+          <div className="card-head">
+            <div>
+              <h2>Log interaction</h2>
+              <div className="hint">Describe the visit in chat — the AI fills the form on the left. You can edit any field, then Save.</div>
+            </div>
           </div>
+          <div className="split">
+            <div className="split-form">
+              <div className="pane-label">Interaction details</div>
+              <InteractionForm />
+            </div>
+            <div className="split-chat">
+              <div className="pane-label">Assistant</div>
+              <ChatPanel />
+            </div>
+          </div>
+        </section>
+
+        <div className="grid">
+          <InteractionList />
+          <FollowUps />
         </div>
+
         <p className="footer-note">
           FastAPI · LangGraph · Groq ({import.meta.env.VITE_MODEL ?? 'gpt-oss-20b'}) · PostgreSQL · React + Redux
         </p>

@@ -29,6 +29,12 @@ export const createInteraction = createAsyncThunk(
   (payload: InteractionCreate) => InteractionsApi.create(payload),
 );
 
+export const updateInteraction = createAsyncThunk(
+  'interactions/update',
+  ({ id, patch }: { id: number; patch: Partial<InteractionCreate> }) =>
+    InteractionsApi.update(id, patch),
+);
+
 const interactionsSlice = createSlice({
   name: 'interactions',
   initialState,
@@ -63,6 +69,10 @@ const interactionsSlice = createSlice({
       .addCase(createInteraction.rejected, (state, action) => {
         state.creating = false;
         state.error = action.error.message ?? 'Failed to log interaction';
+      })
+      .addCase(updateInteraction.fulfilled, (state, action: PayloadAction<Interaction>) => {
+        const idx = state.items.findIndex((i) => i.id === action.payload.id);
+        if (idx !== -1) state.items[idx] = action.payload;
       });
   },
 });
