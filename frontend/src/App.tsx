@@ -1,15 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { InteractionForm } from './components/InteractionForm';
 import { ChatPanel } from './components/ChatPanel';
 import { InteractionList } from './components/InteractionList';
 import { StatsBar } from './components/StatsBar';
 import { FollowUps } from './components/FollowUps';
-import { IconPulse, IconForm, IconChat } from './components/Icons';
+import { IconPulse, IconForm, IconChat, IconSun, IconMoon } from './components/Icons';
 
 type Mode = 'form' | 'chat';
+type Theme = 'light' | 'dark';
 
 function App() {
   const [mode, setMode] = useState<Mode>('form');
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   return (
     <>
@@ -19,6 +30,10 @@ function App() {
         <span className="divider-v" />
         <span className="subtitle">Interaction logging · one agent, five tools</span>
         <span className="spacer" />
+        <button className="icon-btn" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} title="Toggle theme">
+          {theme === 'dark' ? <IconSun size={17} /> : <IconMoon size={17} />}
+        </button>
         <span className="rep">
           <span className="avatar">VS</span>
           Vashu Singh · Field Rep
