@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { InteractionForm } from './components/InteractionForm';
 import { ChatPanel } from './components/ChatPanel';
 import { InteractionList } from './components/InteractionList';
+import { StatsBar } from './components/StatsBar';
+import { FollowUps } from './components/FollowUps';
 
 type Mode = 'form' | 'chat';
 
@@ -21,6 +23,7 @@ function App() {
       </header>
 
       <main className="container">
+        <StatsBar />
         <div className="grid">
           <section className="card">
             <div className="card-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -40,7 +43,10 @@ function App() {
             )}
           </section>
 
-          <InteractionList />
+          <div className="col">
+            <InteractionList />
+            <FollowUps />
+          </div>
         </div>
         <p className="footer-note">
           FastAPI · LangGraph · Groq ({import.meta.env.VITE_MODEL ?? 'gpt-oss-20b'}) · PostgreSQL · React + Redux

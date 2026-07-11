@@ -50,4 +50,15 @@ def test_list_hcps_and_followups(client):
     client.post("/api/interactions", json={"hcp_name": "Dr. List", "raw_notes": "x"})
     assert len(client.get("/api/hcps").json()) == 1
     # log_interaction auto-creates a follow-up (mock has follow_up_action)
-    assert len(client.get("/api/followups").json()) >= 1
+    followups = client.get("/api/followups").json()
+    assert len(followups) >= 1
+    assert followups[0]["hcp"]["name"] == "Dr. List"  # hcp nested for the UI
+
+
+def test_mark_followup_done(client):
+    client.post("/api/interactions", json={"hcp_name": "Dr. FU", "raw_notes": "x"})
+    fid = client.get("/api/followups").json()[0]["id"]
+    r = client.patch(f"/api/followups/{fid}", json={"status": "done"})
+    assert r.status_code == 200
+    assert r.json()["status"] == "done"
+    assert client.patch("/api/followups/9999", json={"status": "done"}).status_code == 404

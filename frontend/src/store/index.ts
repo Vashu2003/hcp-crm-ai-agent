@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { TypedUseSelectorHook } from 'react-redux';
 import interactionsReducer from './interactionsSlice';
 import chatReducer from './chatSlice';
+import followupsReducer from './followupsSlice';
 
 export const store = configureStore({
   reducer: {
     interactions: interactionsReducer,
     chat: chatReducer,
+    followups: followupsReducer,
   },
 });
 

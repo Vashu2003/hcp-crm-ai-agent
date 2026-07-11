@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Interaction, InteractionCreate, HCP } from '../types';
+import type { Interaction, InteractionCreate, HCP, FollowUp } from '../types';
 
 const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
@@ -16,6 +16,12 @@ export const InteractionsApi = {
     api.patch<Interaction>(`/api/interactions/${id}`, payload).then((r) => r.data),
 
   hcps: () => api.get<HCP[]>('/api/hcps').then((r) => r.data),
+};
+
+export const FollowUpsApi = {
+  list: () => api.get<FollowUp[]>('/api/followups').then((r) => r.data),
+  update: (id: number, status: string) =>
+    api.patch<FollowUp>(`/api/followups/${id}`, { status }).then((r) => r.data),
 };
 
 export interface ChatApiResponse {

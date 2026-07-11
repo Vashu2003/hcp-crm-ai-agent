@@ -50,3 +50,13 @@ export interface ChatMessage {
   content: string;
   tool_calls?: string[];
 }
+
+export interface FollowUp {
+  id: number;
+  hcp_id: number;
+  interaction_id?: number | null;
+  due_date?: string | null;
+  action?: string | null;
+  status?: string | null;
+  hcp?: HCP | null;
+}

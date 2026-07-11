@@ -71,6 +71,13 @@ class FollowUpOut(BaseModel):
     action: Optional[str] = None
     status: Optional[str] = None
     created_at: Optional[_datetime] = None
+    hcp: Optional[HCPOut] = None
+
+
+class FollowUpUpdate(BaseModel):
+    status: Optional[str] = None  # pending / done / cancelled
+    due_date: Optional[_date] = None
+    action: Optional[str] = None
 
 
 # ---------- Chat ----------

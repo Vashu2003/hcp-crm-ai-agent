@@ -15,12 +15,14 @@ from app.schemas import (
     InteractionOut,
     HCPOut,
     FollowUpOut,
+    FollowUpUpdate,
 )
 from app.services import (
     log_interaction_service,
     edit_interaction_service,
     search_interactions_service,
     list_followups_service,
+    update_followup_service,
 )
 
 router = APIRouter(prefix="/api", tags=["interactions"])
@@ -96,3 +98,15 @@ def list_hcps(db: Session = Depends(get_db)):
 @router.get("/followups", response_model=list[FollowUpOut])
 def list_followups(status: str | None = None, db: Session = Depends(get_db)):
     return list_followups_service(db, status=status)
+
+
+@router.patch("/followups/{followup_id}", response_model=FollowUpOut)
+def update_followup(
+    followup_id: int, payload: FollowUpUpdate, db: Session = Depends(get_db)
+):
+    fu = update_followup_service(
+        db, followup_id, status=payload.status, due_date=payload.due_date, action=payload.action
+    )
+    if not fu:
+        raise HTTPException(status_code=404, detail="Follow-up not found")
+    return fu

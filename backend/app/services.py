@@ -182,3 +182,22 @@ def list_followups_service(db: Session, status: Optional[str] = None):
     if status:
         q = q.filter(FollowUp.status.ilike(status))
     return q.order_by(FollowUp.due_date.asc().nullslast()).all()
+
+
+def update_followup_service(
+    db: Session, followup_id: int, status=None, due_date=None, action=None
+) -> Optional[FollowUp]:
+    fu = db.get(FollowUp, followup_id)
+    if not fu:
+        return None
+    if status is not None:
+        fu.status = status
+    if due_date is not None:
+        parsed = _parse_date(due_date)
+        if parsed is not None:
+            fu.due_date = parsed
+    if action is not None:
+        fu.action = action
+    db.commit()
+    db.refresh(fu)
+    return fu
