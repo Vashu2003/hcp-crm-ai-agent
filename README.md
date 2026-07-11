@@ -1,15 +1,18 @@
 # HCP CRM — AI Agent for Pharma Field Sales
 
 An **AI-first CRM module** that lets pharmaceutical field-sales reps log their interactions
-with **HCPs (Healthcare Professionals / doctors)** through **two input modes that share one
-AI agent**:
+with **HCPs (Healthcare Professionals / doctors)**. The **Log Interaction** screen is a
+**split view — a structured form on the left, a conversational chat on the right**:
 
-1. **Structured form** — fill in the fields, the agent summarizes & extracts entities.
-2. **Conversational chat** — type naturally ("Met Dr. Sharma today, discussed Xarelto…") and
-   the agent routes your message to the right tool.
+- The rep **describes the visit in chat** ("Met Dr. Sharma today, discussed Xarelto, positive,
+  follow up next week") and the **AI fills the form in real time** — HCP, product, channel,
+  sentiment, summary, follow-up — the rep never types into the fields.
+- Conversational **corrections** ("actually it was a virtual call") edit the same record and
+  **update the form live**.
+- The form fields stay **editable** for manual tweaks, so both input styles are supported.
 
-Both modes are powered by the **same LangGraph agent** with **5 tools**, so natural language
-and structured input run through identical AI logic.
+Everything runs through **one LangGraph agent** with **5 tools**, so form and chat share
+identical AI logic.
 
 > Built as a full-stack demonstration of agentic LLM application design: LangGraph tool-calling,
 > a Groq-hosted LLM, FastAPI, PostgreSQL, and a React + Redux Toolkit frontend.
@@ -25,7 +28,7 @@ and structured input run through identical AI logic.
 - **Schedule Follow-up** with an AI **next-best-action** suggestion.
 - **Generate Summary Report** — an LLM narrative across many interactions
   ("summarize my last month with Dr. Sharma").
-- One agent, two front doors: **Form** and **Chat** both call the same tools.
+- **AI-driven split view** — chat on the right fills the structured form on the left in real time.
 
 **Beyond the brief (extra features):**
 - **Analytics stats row** — live counts of interactions, HCPs engaged, sentiment split, follow-ups due.

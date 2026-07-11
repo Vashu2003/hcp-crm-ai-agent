@@ -59,6 +59,22 @@ def test_edit_interaction_keeps_date_on_unparseable(db):
     assert updated.date == original
 
 
+def test_edit_interaction_relinks_hcp_when_name_corrected(db):
+    # Correcting a mis-attributed HCP re-links the interaction to the named HCP.
+    i = log_interaction_service(db, hcp_name="Dr. Wrong", raw_notes="a")
+    updated = edit_interaction_service(db, i.id, hcp_name="Dr. Right", specialty="Cardiology")
+    assert updated.hcp.name == "Dr. Right"
+    assert updated.hcp.specialty == "Cardiology"
+
+
+def test_edit_interaction_specialty_only_updates_current_hcp(db):
+    i = log_interaction_service(db, hcp_name="Dr. Spec", raw_notes="a")
+    hcp_id = i.hcp_id
+    updated = edit_interaction_service(db, i.id, specialty="Neurology")
+    assert updated.hcp_id == hcp_id  # no re-link
+    assert updated.hcp.specialty == "Neurology"
+
+
 def test_search_filters_by_hcp_and_sentiment(db):
     log_interaction_service(db, hcp_name="Dr. One", raw_notes="a")
     log_interaction_service(db, hcp_name="Dr. Two", raw_notes="b")

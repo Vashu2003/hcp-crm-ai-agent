@@ -37,6 +37,9 @@ class InteractionCreate(BaseModel):
 
 
 class InteractionUpdate(BaseModel):
+    hcp_name: Optional[str] = None
+    specialty: Optional[str] = None
+    organization: Optional[str] = None
     rep_name: Optional[str] = None
     date: Optional[_date] = None
     channel: Optional[str] = None

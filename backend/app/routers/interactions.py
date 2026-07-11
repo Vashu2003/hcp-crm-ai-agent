@@ -79,6 +79,9 @@ def update_interaction(
     interaction = edit_interaction_service(
         db,
         interaction_id,
+        hcp_name=payload.hcp_name,
+        specialty=payload.specialty,
+        organization=payload.organization,
         raw_notes=payload.raw_notes,
         rep_name=payload.rep_name,
         date=payload.date,

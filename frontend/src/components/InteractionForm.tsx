@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
 import { createInteraction, updateInteraction, fetchInteractions } from '../store/interactionsSlice';
 import { clearLastInteraction } from '../store/chatSlice';
 import type { InteractionCreate } from '../types';
 import { SentimentBadge } from './SentimentBadge';
 import { IconSpark } from './Icons';
+
+// The logged-in rep. In a real app this comes from auth; hard-coded for the demo.
+const REP_NAME = 'Vashu Singh';
 
 const todayLocal = () => {
   const d = new Date();
@@ -22,21 +25,28 @@ interface FormState {
   raw_notes: string;
 }
 
-const EMPTY: FormState = {
+// A fresh empty form — computed each time so the date never goes stale across midnight.
+const makeEmpty = (): FormState => ({
   hcp_name: '', specialty: '', organization: '', product_discussed: '',
   channel: 'in-person', date: todayLocal(), raw_notes: '',
-};
+});
 
 export function InteractionForm() {
   const dispatch = useAppDispatch();
   const lastInteraction = useAppSelector((s) => s.chat.lastInteraction);
   const { creating, error } = useAppSelector((s) => s.interactions);
-  const [form, setForm] = useState<FormState>(EMPTY);
+  const [form, setForm] = useState<FormState>(makeEmpty);
+  // Tracks the last record we synced into the form. Re-sync only when the agent
+  // actually creates/changes a record (new id or new updated_at) — otherwise an
+  // unrelated chat reply would clobber the rep's in-progress manual edits.
+  const syncedKey = useRef<string>('');
 
-  // The AI fills the form: whenever the chat agent logs/edits an interaction, sync it here.
   useEffect(() => {
     const it = lastInteraction;
     if (!it) return;
+    const key = `${it.id}:${it.updated_at ?? ''}`;
+    if (key === syncedKey.current) return;
+    syncedKey.current = key;
     setForm({
       id: it.id,
       hcp_name: it.hcp?.name ?? '',
@@ -53,27 +63,46 @@ export function InteractionForm() {
   const editing = form.id != null;
   const ents = editing ? lastInteraction?.extracted_entities : null;
 
-  const clear = () => { setForm(EMPTY); dispatch(clearLastInteraction()); };
+  const clear = () => {
+    syncedKey.current = '';
+    setForm(makeEmpty());
+    dispatch(clearLastInteraction());
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const done = () => dispatch(fetchInteractions());
+
     if (editing) {
-      dispatch(updateInteraction({
-        id: form.id!,
-        patch: {
-          product_discussed: form.product_discussed,
-          channel: form.channel,
-          date: form.date,
-          raw_notes: form.raw_notes,
-        },
-      })).then(done);
+      // Send only fields the rep actually changed. In particular, resend raw_notes
+      // only when edited, so a channel/product tweak doesn't re-run the LLM summary.
+      const orig = {
+        hcp_name: lastInteraction?.hcp?.name ?? '',
+        specialty: lastInteraction?.hcp?.specialty ?? '',
+        organization: lastInteraction?.hcp?.organization ?? '',
+        product_discussed: lastInteraction?.product_discussed ?? '',
+        channel: lastInteraction?.channel ?? '',
+        date: lastInteraction?.date ?? '',
+        raw_notes: lastInteraction?.raw_notes ?? '',
+      };
+      const patch: Partial<InteractionCreate> = {};
+      if (form.hcp_name.trim() && form.hcp_name !== orig.hcp_name) patch.hcp_name = form.hcp_name;
+      if (form.specialty !== orig.specialty) patch.specialty = form.specialty;
+      if (form.organization !== orig.organization) patch.organization = form.organization;
+      if (form.product_discussed !== orig.product_discussed) patch.product_discussed = form.product_discussed;
+      if (form.channel !== orig.channel) patch.channel = form.channel;
+      if (form.date && form.date !== orig.date) patch.date = form.date;
+      if (form.raw_notes.trim() && form.raw_notes !== orig.raw_notes) patch.raw_notes = form.raw_notes;
+
+      if (Object.keys(patch).length === 0) return; // nothing changed
+      dispatch(updateInteraction({ id: form.id!, patch })).then(done);
     } else {
       if (!form.hcp_name.trim() || !form.raw_notes.trim()) return;
       const payload: InteractionCreate = {
         hcp_name: form.hcp_name,
         specialty: form.specialty || undefined,
         organization: form.organization || undefined,
+        rep_name: REP_NAME,
         product_discussed: form.product_discussed || undefined,
         channel: form.channel || undefined,
         date: form.date || undefined,
@@ -99,22 +128,30 @@ export function InteractionForm() {
       <div className="row">
         <div className="field">
           <label>HCP name <span className="req">*</span></label>
-          <input className="input" placeholder="Dr. Anita Sharma" readOnly={editing}
+          <input className="input" placeholder="Dr. Anita Sharma"
             value={form.hcp_name} onChange={(e) => set('hcp_name', e.target.value)} />
         </div>
         <div className="field">
           <label>Specialty</label>
-          <input className="input" placeholder="Cardiology" readOnly={editing}
+          <input className="input" placeholder="Cardiology"
             value={form.specialty} onChange={(e) => set('specialty', e.target.value)} />
         </div>
       </div>
 
       <div className="row">
         <div className="field">
+          <label>Organization</label>
+          <input className="input" placeholder="Apollo Hospital"
+            value={form.organization} onChange={(e) => set('organization', e.target.value)} />
+        </div>
+        <div className="field">
           <label>Product discussed</label>
           <input className="input" placeholder="Xarelto"
             value={form.product_discussed} onChange={(e) => set('product_discussed', e.target.value)} />
         </div>
+      </div>
+
+      <div className="row">
         <div className="field">
           <label>Channel</label>
           <select className="select" value={form.channel} onChange={(e) => set('channel', e.target.value)}>
@@ -123,11 +160,10 @@ export function InteractionForm() {
             <option value="virtual">Virtual</option>
           </select>
         </div>
-      </div>
-
-      <div className="field">
-        <label>Date</label>
-        <input className="input" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
+        <div className="field">
+          <label>Date</label>
+          <input className="input" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
+        </div>
       </div>
 
       <div className="field">

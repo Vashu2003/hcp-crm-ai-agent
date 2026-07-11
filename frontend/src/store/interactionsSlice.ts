@@ -70,9 +70,18 @@ const interactionsSlice = createSlice({
         state.creating = false;
         state.error = action.error.message ?? 'Failed to log interaction';
       })
+      .addCase(updateInteraction.pending, (state) => {
+        state.creating = true;
+        state.error = null;
+      })
       .addCase(updateInteraction.fulfilled, (state, action: PayloadAction<Interaction>) => {
+        state.creating = false;
         const idx = state.items.findIndex((i) => i.id === action.payload.id);
         if (idx !== -1) state.items[idx] = action.payload;
+      })
+      .addCase(updateInteraction.rejected, (state, action) => {
+        state.creating = false;
+        state.error = action.error.message ?? 'Failed to save changes';
       });
   },
 });

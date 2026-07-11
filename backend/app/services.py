@@ -103,7 +103,7 @@ def log_interaction_service(
 
 def edit_interaction_service(db: Session, interaction_id: int, **fields) -> Optional[Interaction]:
     """Update an interaction; re-run extraction if raw_notes changed."""
-    interaction = db.query(Interaction).get(interaction_id)
+    interaction = db.get(Interaction, interaction_id)
     if not interaction:
         return None
 
@@ -113,6 +113,24 @@ def edit_interaction_service(db: Session, interaction_id: int, **fields) -> Opti
         interaction.llm_summary = extraction.get("summary")
         interaction.extracted_entities = extraction
         interaction.sentiment = extraction.get("sentiment")
+
+    # Correct a mis-attributed HCP: re-link the interaction to the named HCP
+    # (create it if new). A specialty-only edit updates the current HCP.
+    hcp_name = fields.get("hcp_name")
+    specialty = fields.get("specialty")
+    organization = fields.get("organization")
+    if hcp_name:
+        hcp = get_or_create_hcp(db, hcp_name, specialty, organization)
+        interaction.hcp_id = hcp.id
+        if specialty:
+            hcp.specialty = specialty
+        if organization:
+            hcp.organization = organization
+    elif interaction.hcp and (specialty or organization):
+        if specialty:
+            interaction.hcp.specialty = specialty
+        if organization:
+            interaction.hcp.organization = organization
 
     for key in ("rep_name", "channel", "product_discussed"):
         if fields.get(key) is not None:

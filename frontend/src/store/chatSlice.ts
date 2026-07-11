@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { ChatApi } from '../api/client';
+import { updateInteraction } from './interactionsSlice';
 import type { ChatMessage, Interaction } from '../types';
 
 interface ChatState {
@@ -73,6 +74,13 @@ const chatSlice = createSlice({
           role: 'assistant',
           content: 'Sorry — I could not reach the agent. Is the backend running and the GROQ_API_KEY set?',
         });
+      })
+      // A manual form save returns the recomputed record — keep the form's AI
+      // summary/sentiment display in sync with what was just persisted.
+      .addCase(updateInteraction.fulfilled, (state, action) => {
+        if (state.lastInteraction && state.lastInteraction.id === action.payload.id) {
+          state.lastInteraction = action.payload;
+        }
       });
   },
 });

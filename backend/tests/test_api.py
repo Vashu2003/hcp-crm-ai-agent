@@ -41,6 +41,15 @@ def test_update_interaction(client):
     assert r.json()["channel"] == "call"
 
 
+def test_update_interaction_corrects_hcp(client):
+    # The rep can correct a mis-attributed HCP through the form's PATCH.
+    iid = client.post("/api/interactions", json={"hcp_name": "Dr. Wrong", "raw_notes": "old"}).json()["id"]
+    r = client.patch(f"/api/interactions/{iid}", json={"hcp_name": "Dr. Right", "specialty": "Cardiology"})
+    assert r.status_code == 200
+    assert r.json()["hcp"]["name"] == "Dr. Right"
+    assert r.json()["hcp"]["specialty"] == "Cardiology"
+
+
 def test_update_missing_interaction_404(client):
     r = client.patch("/api/interactions/9999", json={"channel": "call"})
     assert r.status_code == 404
