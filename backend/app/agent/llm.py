@@ -16,10 +16,17 @@ from app.agent.prompts import EXTRACTION_PROMPT
 @lru_cache(maxsize=1)
 def get_llm(temperature: float = 0.2) -> ChatGroq:
     """Return a cached ChatGroq client bound to the configured model."""
+    kwargs = {}
+    # gpt-oss models are reasoning models; low effort slashes reasoning-token spend
+    # on our simple tool-routing without hurting accuracy. (Not valid for llama models.)
+    if "gpt-oss" in settings.groq_model:
+        kwargs["model_kwargs"] = {"reasoning_effort": "low"}
     return ChatGroq(
         api_key=settings.groq_api_key,
         model=settings.groq_model,
         temperature=temperature,
+        max_tokens=900,  # cap output to control token spend + latency
+        **kwargs,
     )
 
 

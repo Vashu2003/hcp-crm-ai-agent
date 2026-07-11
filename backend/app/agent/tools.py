@@ -17,10 +17,12 @@ from app.services import (
 
 
 def _fmt_interaction(i) -> str:
+    # Truncate the summary to keep tool output (fed back to the LLM) token-bounded.
+    summary = (i.llm_summary or i.raw_notes or "")[:160]
     return (
         f"#{i.id} | {i.hcp.name if i.hcp else '?'} | {i.date} | "
         f"{i.channel or '-'} | product: {i.product_discussed or '-'} | "
-        f"sentiment: {i.sentiment or '-'}\n    summary: {i.llm_summary or i.raw_notes}"
+        f"sentiment: {i.sentiment or '-'}\n    summary: {summary}"
     )
 
 

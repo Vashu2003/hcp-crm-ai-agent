@@ -42,7 +42,8 @@ def get_graph():
 def run_agent(message: str, history: list[dict] | None = None) -> dict:
     """Run one chat turn through the agent. Returns {reply, tool_calls}."""
     messages = []
-    for turn in history or []:
+    # Only replay the most recent turns — history is context, not unbounded transcript.
+    for turn in (history or [])[-8:]:
         role = turn.get("role")
         content = turn.get("content", "")
         if role == "user":
@@ -93,4 +94,14 @@ def run_agent(message: str, history: list[dict] | None = None) -> dict:
             else "I'm not sure how to help with that. Try asking me to log, search, "
             "schedule a follow-up, or summarize interactions."
         )
+
+    # Log token spend per turn for cost visibility.
+    tokens = sum(
+        (getattr(m, "usage_metadata", None) or {}).get("total_tokens", 0)
+        for m in out_messages
+        if isinstance(m, AIMessage)
+    )
+    if tokens:
+        print(f"[agent] turn used ~{tokens} tokens · tools={tool_calls or 'none'}", flush=True)
+
     return {"reply": reply, "tool_calls": tool_calls}
