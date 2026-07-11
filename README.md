@@ -27,6 +27,11 @@ and structured input run through identical AI logic.
   ("summarize my last month with Dr. Sharma").
 - One agent, two front doors: **Form** and **Chat** both call the same tools.
 
+**Beyond the brief (extra features):**
+- **Analytics stats row** — live counts of interactions, HCPs engaged, sentiment split, follow-ups due.
+- **Follow-ups panel** — AI-created follow-ups with overdue badges and one-click **mark-done**.
+- **Markdown chat** — agent replies render tables / lists / bold for a clean, readable conversation.
+
 ---
 
 ## 🏗️ Architecture
@@ -135,6 +140,10 @@ App: http://localhost:5173
 ---
 
 ## 📸 Screenshots
+
+**Dashboard** — stats row, Log Interaction (Form/Chat), live interaction list, and follow-ups:
+
+![Dashboard](docs/screenshots/dashboard.png)
 
 **Form mode** — structured logging with live AI summary & entity extraction:
 
