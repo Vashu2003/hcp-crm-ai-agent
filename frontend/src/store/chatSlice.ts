@@ -24,7 +24,11 @@ export const sendMessage = createAsyncThunk(
   'chat/send',
   async (text: string, { getState }) => {
     const state = getState() as { chat: ChatState };
-    const history = state.chat.messages.map((m) => ({ role: m.role, content: m.content }));
+    // Exclude the just-pushed current user message; the backend appends `text` itself,
+    // so including it here would send the turn to the LLM twice.
+    const history = state.chat.messages
+      .slice(0, -1)
+      .map((m) => ({ role: m.role, content: m.content }));
     return ChatApi.send(text, history);
   },
 );

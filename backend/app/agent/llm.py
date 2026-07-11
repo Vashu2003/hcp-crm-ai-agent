@@ -43,15 +43,9 @@ def summarize_and_extract(raw_notes: str) -> dict:
     key_topics, sentiment, samples_given, follow_up_date, follow_up_action.
     Falls back to a minimal dict if the model returns unparseable output.
     """
-    llm = get_llm()
-    prompt = EXTRACTION_PROMPT.replace("{raw_notes}", raw_notes)
-    resp = llm.invoke(prompt)
-    content = resp.content if isinstance(resp.content, str) else str(resp.content)
-    try:
-        data = json.loads(_strip_code_fence(content))
-    except (json.JSONDecodeError, ValueError):
-        data = {
-            "summary": content.strip()[:500],
+    def _fallback(summary: str) -> dict:
+        return {
+            "summary": summary,
             "hcp_name": None,
             "specialty": None,
             "products": [],
@@ -61,4 +55,16 @@ def summarize_and_extract(raw_notes: str) -> dict:
             "follow_up_date": None,
             "follow_up_action": None,
         }
-    return data
+
+    # Any LLM/API failure (rate limit, network) must NOT lose the rep's notes: fall
+    # back to persisting the raw notes as the summary rather than raising.
+    try:
+        resp = get_llm().invoke(EXTRACTION_PROMPT.replace("{raw_notes}", raw_notes))
+        content = resp.content if isinstance(resp.content, str) else str(resp.content)
+    except Exception:
+        return _fallback(raw_notes.strip()[:500])
+
+    try:
+        return json.loads(_strip_code_fence(content))
+    except (json.JSONDecodeError, ValueError):
+        return _fallback(content.strip()[:500] or raw_notes.strip()[:500])

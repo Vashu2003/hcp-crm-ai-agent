@@ -32,8 +32,9 @@ def get_or_create_hcp(
     specialty: Optional[str] = None,
     organization: Optional[str] = None,
 ) -> HCP:
-    """Find an HCP by (case-insensitive) name or create a new one."""
-    hcp = db.query(HCP).filter(HCP.name.ilike(name.strip())).first()
+    """Find an HCP by (case-insensitive, whitespace-normalized) name or create one."""
+    name = " ".join(name.split())  # collapse internal/edge whitespace
+    hcp = db.query(HCP).filter(HCP.name.ilike(name)).first()
     if hcp:
         # backfill specialty/org if newly provided
         if specialty and not hcp.specialty:
@@ -41,7 +42,7 @@ def get_or_create_hcp(
         if organization and not hcp.organization:
             hcp.organization = organization
         return hcp
-    hcp = HCP(name=name.strip(), specialty=specialty, organization=organization)
+    hcp = HCP(name=name, specialty=specialty, organization=organization)
     db.add(hcp)
     db.flush()  # assign id without committing
     return hcp
@@ -117,7 +118,9 @@ def edit_interaction_service(db: Session, interaction_id: int, **fields) -> Opti
         if fields.get(key) is not None:
             setattr(interaction, key, fields[key])
     if fields.get("date") is not None:
-        interaction.date = _parse_date(fields["date"])
+        parsed = _parse_date(fields["date"])
+        if parsed is not None:  # don't wipe a valid stored date on an unparseable input
+            interaction.date = parsed
 
     db.commit()
     db.refresh(interaction)

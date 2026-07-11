@@ -50,6 +50,15 @@ def test_edit_interaction_missing_returns_none(db):
     assert edit_interaction_service(db, 9999, raw_notes="x") is None
 
 
+def test_edit_interaction_keeps_date_on_unparseable(db):
+    # Regression: an unparseable date must NOT wipe the stored date.
+    i = log_interaction_service(db, hcp_name="Dr. Test", raw_notes="a", interaction_date="2026-05-01")
+    original = i.date
+    assert original == date(2026, 5, 1)
+    updated = edit_interaction_service(db, i.id, date="next Tuesday")
+    assert updated.date == original
+
+
 def test_search_filters_by_hcp_and_sentiment(db):
     log_interaction_service(db, hcp_name="Dr. One", raw_notes="a")
     log_interaction_service(db, hcp_name="Dr. Two", raw_notes="b")

@@ -4,12 +4,19 @@ import { createInteraction, clearLastCreated } from '../store/interactionsSlice'
 import type { InteractionCreate } from '../types';
 import { SentimentBadge } from './SentimentBadge';
 
+// Local calendar date (YYYY-MM-DD), not UTC — so a rep in IST logging before ~5:30am
+// doesn't get yesterday's date.
+const todayLocal = () => {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+};
+
 const EMPTY: InteractionCreate = {
   hcp_name: '',
   specialty: '',
   organization: '',
   rep_name: 'Vashu Singh',
-  date: new Date().toISOString().slice(0, 10),
+  date: todayLocal(),
   channel: 'in-person',
   product_discussed: '',
   raw_notes: '',
@@ -25,9 +32,12 @@ export function InteractionForm() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.hcp_name.trim() || !form.raw_notes.trim()) return;
-    dispatch(createInteraction(form)).then((res) => {
+    // Drop empty optional fields so we never POST date:"" (which the API 422s).
+    const payload = { ...form };
+    if (!payload.date) delete payload.date;
+    dispatch(createInteraction(payload)).then((res) => {
       if (createInteraction.fulfilled.match(res)) {
-        setForm({ ...EMPTY, date: new Date().toISOString().slice(0, 10) });
+        setForm({ ...EMPTY, date: todayLocal() });
       }
     });
   };
